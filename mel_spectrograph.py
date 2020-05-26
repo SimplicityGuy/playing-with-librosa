@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-"""Beat detection using librosa."""
+"""Mel spectrograph using librosa."""
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,15 +14,15 @@ hop_length = 1024
 
 
 def beat_detection(filename):
-    """Beat detection using librosa."""
+    """Mel spectrograph using librosa."""
     # y  = loaded audio as waveform
     # sr = sampling rate
     y, sr = librosa.load(filename, sr=44100)
 
-    # Let's make and display a mel-scaled power (energy-squared) spectrogram.
+    # Mel-scaled power (energy-squared) spectrogram.
     S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128)
 
-    # Convert to log scale (dB). We'll use the peak power (max) as reference.
+    # Convert to log scale (dB). Use the peak power (max) as reference.
     log_S = librosa.power_to_db(S, ref=np.max)
 
     plt.figure(figsize=(12, 4))
