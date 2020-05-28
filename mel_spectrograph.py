@@ -76,10 +76,10 @@ def main():
         # sr = sampling rate
         y, sr = librosa.load(filename, sr=44100)
 
-    if args.get("full_mel", False):
+    if args["full_mel"]:
         mel_spectrograph(y, sr)
 
-    if args.get("split_mel", False):
+    if args["split_mel"]:
         _, _ = mel_spectrograph_by_source(y, sr)
 
 
