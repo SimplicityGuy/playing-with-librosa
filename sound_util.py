@@ -14,29 +14,30 @@ hop_length = 1024
 
 
 def mel_spectrograph(y, sr):
-    """Mel spectrograph using librosa."""
+    """Compute mel spectrograph."""
     # Mel-scaled power (energy-squared) spectrogram.
     S = librosa.feature.melspectrogram(y, sr=sr)
 
     # Convert to log scale (dB). Use the peak power (max) as reference.
     log_S = librosa.power_to_db(S, ref=np.max)
 
+    return S, log_S
+
+
+def show_mel_spectrograph(S, sr):
+    """Display mel spectrograph using librosa."""
     plt.figure(figsize=(12, 4))
-
     # Display the spectrogram on a mel scale.
-    # sample rate and hop length parameters are used to render the time axis.
-    librosa.display.specshow(log_S, sr=sr, x_axis="time", y_axis="mel")
-
+    # Sample rate and hop length parameters are used to render the time axis.
+    librosa.display.specshow(S, sr=sr, x_axis="time", y_axis="mel")
     plt.title("mel power spectrogram")
     plt.colorbar(format="%+02.0f dB")
     plt.tight_layout()
     plt.show()
 
 
-def mel_spectrograph_by_source(y, sr, show=True):
-    """Mel spectrograph by source using librosa."""
-    y_harmonic, y_percussive = librosa.effects.hpss(y)
-
+def mel_spectrograph_by_source(y_harmonic, y_percussive, sr):
+    """Compute mel spectrograph by source using librosa."""
     # Mel-scaled power (energy-squared) spectrogram.
     S_harmonic = librosa.feature.melspectrogram(y_harmonic, sr=sr)
     S_percussive = librosa.feature.melspectrogram(y_percussive, sr=sr)
@@ -45,11 +46,12 @@ def mel_spectrograph_by_source(y, sr, show=True):
     log_Sh = librosa.power_to_db(S_harmonic, ref=np.max)
     log_Sp = librosa.power_to_db(S_percussive, ref=np.max)
 
-    if not show:
-        return y_harmonic, y_percussive
+    return S_harmonic, S_percussive, log_Sh, log_Sp
 
+
+def show_mel_spectrograph_by_source(log_Sh, log_Sp, sr):
+    """Display mel spectrograph by source using librosa."""
     plt.figure(figsize=(12, 6))
-
     plt.subplot(2, 1, 1)
     librosa.display.specshow(log_Sh, sr=sr, x_axis="time", y_axis="mel")
     plt.title("mel power spectrogram (Harmonic)")
@@ -61,20 +63,19 @@ def mel_spectrograph_by_source(y, sr, show=True):
     plt.tight_layout()
     plt.show()
 
-    return y_harmonic, y_percussive
 
-
-def harmonic_chromagram(y_harmonic, sr):
-    """Chroma feature extraction."""
+def chromagram(y, sr):
+    """Compute chroma feature extraction."""
     # CQT-based chromagram with 36 bins-per-octave in the CQT analysis.
-    # Use only the harmonic component to avoid pollution from transients.
-    C = librosa.feature.chroma_cqt(y=y_harmonic, sr=sr, bins_per_octave=36)
+    # Preferably, use only the harmonic component to avoid pollution from transients.
+    return librosa.feature.chroma_cqt(y=y, sr=sr, bins_per_octave=36)
 
+
+def show_chromagram(C, sr):
+    """Display chroma feature extraction."""
     plt.figure(figsize=(12, 4))
-
     # The energy in each chromatic pitch class as a function of time.
     librosa.display.specshow(C, sr=sr, x_axis="time", y_axis="chroma", vmin=0, vmax=1)
-
     plt.title("Chromagram")
     plt.colorbar()
     plt.tight_layout()
@@ -98,14 +99,18 @@ def main():
         y, sr = librosa.load(filename, sr=44100)
 
     if args["full_mel"]:
-        mel_spectrograph(y, sr)
+        s, log_s = mel_spectrograph(y, sr)
+        show_mel_spectrograph(log_s, sr)
 
     if args["split_mel"]:
-        _, _ = mel_spectrograph_by_source(y, sr)
+        y_harmonic, y_percussive = librosa.effects.hpss(y)
+        _, _, log_sh, log_sp = mel_spectrograph_by_source(y_harmonic, y_percussive, sr)
+        show_mel_spectrograph_by_source(log_sh, log_sp, sr)
 
     if args["chroma"]:
-        y_harmonic, _ = mel_spectrograph_by_source(y, sr, show=False)
-        harmonic_chromagram(y_harmonic, sr)
+        y_harmonic, _ = librosa.effects.hpss(y)
+        c = chromagram(y_harmonic, sr)
+        show_chromagram(c, sr)
 
 
 if __name__ == "__main__":
