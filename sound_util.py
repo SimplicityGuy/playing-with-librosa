@@ -82,6 +82,39 @@ def show_chromagram(C, sr):
     plt.show()
 
 
+def sound_texture(log_S, num_coeff=13):
+    """Compute the mel-frequency cepstral coefficients, or sound texture."""
+    # Extract the top num_coeff Mel-frequency cepstral coefficients (MFCCs).
+    mfcc = librosa.feature.mfcc(S=log_S, n_mfcc=num_coeff)
+
+    # Pad on the first and second deltas.
+    delta_mfcc = librosa.feature.delta(mfcc)
+    delta2_mfcc = librosa.feature.delta(mfcc, order=2)
+
+    M = np.vstack([mfcc, delta_mfcc, delta2_mfcc])
+
+    return mfcc, delta_mfcc, delta2_mfcc, M
+
+
+def show_sound_texture(mfcc, delta_mfcc, delta2_mfcc, sr):
+    """Display the mel-frequency cepstral coefficients, or sound texture."""
+    plt.figure(figsize=(12, 6))
+    plt.subplot(3, 1, 1)
+    librosa.display.specshow(mfcc)
+    plt.ylabel("MFCC")
+    plt.colorbar()
+    plt.subplot(3, 1, 2)
+    librosa.display.specshow(delta_mfcc)
+    plt.ylabel("MFCC-$\Delta$")  # noqa: W605
+    plt.colorbar()
+    plt.subplot(3, 1, 3)
+    librosa.display.specshow(delta2_mfcc, sr=sr, x_axis="time")
+    plt.ylabel("MFCC-$\Delta^2$")  # noqa: W605
+    plt.colorbar()
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     """Parameter handling main method."""
     parser = argparse.ArgumentParser(description="Mel spectrograph using librosa.")
@@ -89,6 +122,7 @@ def main():
     parser.add_argument("--full_mel", action="store_true", help="full mel spectrograph")
     parser.add_argument("--split_mel", action="store_true", help="per source mel spectrograph")
     parser.add_argument("--chroma", action="store_true", help="chromagram from harmonic")
+    parser.add_argument("--texture", action="store_true", help="sound texture")
     args = vars(parser.parse_args())
 
     filename = args["filename"]
@@ -111,6 +145,11 @@ def main():
         y_harmonic, _ = librosa.effects.hpss(y)
         c = chromagram(y_harmonic, sr)
         show_chromagram(c, sr)
+
+    if args["texture"]:
+        _, log_s = mel_spectrograph(y, sr)
+        mfcc, delta_mfcc, delta2_mfcc, _ = sound_texture(log_s)
+        show_sound_texture(mfcc, delta_mfcc, delta2_mfcc, sr)
 
 
 if __name__ == "__main__":
