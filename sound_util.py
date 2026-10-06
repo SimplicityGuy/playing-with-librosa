@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 """Mel spectrograph using librosa."""
+
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
