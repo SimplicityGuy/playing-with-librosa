@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 """Beat detection using librosa."""
+
 import argparse
 import warnings
 
